@@ -1,8 +1,10 @@
-def _str_print(line):
+__all__ = ["BasicRenderer"]
+
+def __str_print(line):
     print(str(line))
 
 class BasicRenderer:
-    def __init__(self, headers = None, body = None, output = _str_print):
+    def __init__(self, headers = None, body = None, output = None):
         '''
         Constructor of a BasicRender
         
@@ -11,7 +13,7 @@ class BasicRenderer:
                   (default {})
         body -- the body part of the request (must be iterable)
                 (default [])
-        output -- the function used to output the value
+        output -- the function used to output the value (default print(str(value)))
         '''
         self.headers = headers if headers is not None else {}
         assert callable(getattr(self.headers, 'keys', None)), 'Headers must have a keys method'
@@ -19,7 +21,7 @@ class BasicRenderer:
         # if body is not none use body, else use a new list
         self.body = body if body is not None else []
         # pass in the default output method 
-        self.output = output
+        self.output = output if output is not None else __str_print
     
     def setHeader(self,name,value):
         ''' allows for easy means of setting a header '''
