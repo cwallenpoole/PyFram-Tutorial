@@ -19,7 +19,7 @@ class BasicRenderer:
                   (default {})
         body -- the body part of the request (must be iterable)
                 (default [])
-        output -- the function used to output the value (default print(str(value)))exit
+        output -- the function used to output the value (default print(str(value)))
         '''
         self.headers = headers if headers is not None else {}
         assert callable(getattr(self.headers, 'keys', None)), 'Headers must have a keys method'
