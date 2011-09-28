@@ -1,0 +1,10 @@
+AddHandler cgi-script .cgi .py
+Options +ExecCGI
+DirectoryIndex index.py
+
+RewriteEngine On
+RewriteBase /pyftut/ex2/
+RewriteRule ^index\.py$ - [L]
+RewriteRule . /pyftut/ex2/index.py [L]
+
+# Alias /alias ../
