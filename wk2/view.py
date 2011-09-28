@@ -29,9 +29,11 @@ class BasicRenderer:
             'Headers must have a keys method'
         # if body is not none use body, else use a new list
         self.body = body if body is not None else []
-        assert callable(output), 'output must be callable'
+        assert hasattr(self.body,'__iter__'), \
+            'body must be iterable'
         # pass in the default output method 
         self.output = output
+        assert callable(output), 'output must be callable'
     
     def setHeader(self,name,value):
         ''' allows for easy means of setting a header '''
