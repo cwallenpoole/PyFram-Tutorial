@@ -13,12 +13,18 @@ class Appender:
         self.body.append(str(line))
 
 class TestBasicRenderer(unittest.TestCase):
+    def test_noHeaderNoBody(self):
+        appender = Appender()
+        render = view.BasicRenderer(output=appender.append)
+        render.render()
+        self.assertEqual(appender.body,[''])
+    
     def test_headerNoBody(self):
         appender = Appender()
         render = view.BasicRenderer(headers={'foo':'bar', 'baz':'bat'}, output=appender.append)
         render.render()
         self.assertEqual(appender.body,['foo: bar', 'baz: bat'])
-    
+        
     def test_bodyNoHeader(self):
         appender = Appender()
         render = view.BasicRenderer(body=[1,2,3], output=appender.append)

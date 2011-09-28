@@ -1,10 +1,16 @@
 __all__ = ["BasicRenderer"]
 
-def __str_print(line):
+def _str_print(line):
     print(str(line))
 
 class BasicRenderer:
-    def __init__(self, headers = None, body = None, output = None):
+    ''' 
+    A simple way to manage output to the browser, this will be the basis of all of the 
+    view classes which will be used in PyFram. The use is simple:
+    renderer = BasicRenderer()
+    renderer.output()
+    '''
+    def __init__(self, headers = None, body = None, output = _str_print):
         '''
         Constructor of a BasicRender
         
@@ -13,7 +19,7 @@ class BasicRenderer:
                   (default {})
         body -- the body part of the request (must be iterable)
                 (default [])
-        output -- the function used to output the value (default print(str(value)))
+        output -- the function used to output the value (default print(str(value)))exit
         '''
         self.headers = headers if headers is not None else {}
         assert callable(getattr(self.headers, 'keys', None)), 'Headers must have a keys method'
@@ -21,7 +27,7 @@ class BasicRenderer:
         # if body is not none use body, else use a new list
         self.body = body if body is not None else []
         # pass in the default output method 
-        self.output = output if output is not None else __str_print
+        self.output = output
     
     def setHeader(self,name,value):
         ''' allows for easy means of setting a header '''
@@ -39,12 +45,17 @@ class BasicRenderer:
         ''' passes each line of output to the output function '''
         # make it as easy as possible to pass in a new output
         output = output if output else self.output
+        if not (self.headers or self.body):
+            # if neither, make sure that the script knows that it needs
+            # to output *something* otherwise we'll get an error!
+            output('')
+            return
+            
         for key in self.headers.keys():
             output("{0}: {1}".format(key, self.headers[key]))
             
-        if self.body:
-            # remember, that first line before the body needs to be a 
-            # \n or it will be an error
-            output("")
+        # remember, that first line after the headers needs to be empty
+        # whether there have been headers output or not!
+        output("")
         for ln in self.body:
             output(ln)
