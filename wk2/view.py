@@ -1,5 +1,8 @@
+def _str_print(line):
+    print(str(line))
+
 class BasicRenderer:
-    def __init__(self, headers = None, body = None, output = print):
+    def __init__(self, headers = None, body = None, output = _str_print):
         '''
         Constructor of a BasicRender
         
@@ -10,8 +13,9 @@ class BasicRenderer:
                 (default [])
         output -- the function used to output the value
         '''
-        # if headers is not none use headers, use a new dictionary
         self.headers = headers if headers is not None else {}
+        assert callable(getattr(self.headers, 'keys', None)), 'Headers must have a keys method'
+        # if headers is not none use headers, use a new dictionary
         # if body is not none use body, else use a new list
         self.body = body if body is not None else []
         # pass in the default output method 
@@ -33,12 +37,12 @@ class BasicRenderer:
         ''' passes each line of output to the output function '''
         # make it as easy as possible to pass in a new output
         output = output if output else self.output
-        # remember, that first line before the body needs to be a 
-        # \n or it will be an error
-        if not self.headers:
-            output("\n")
-        else:
-            for key in self.headers.keys():
-                output(key+": "+self.headers[key] + "\n")
+        for key in self.headers.keys():
+            output("{0}: {1}".format(key, self.headers[key]))
+            
+        if self.body:
+            # remember, that first line before the body needs to be a 
+            # \n or it will be an error
+            output("")
         for ln in self.body:
             output(ln)
