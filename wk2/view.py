@@ -5,8 +5,8 @@ def _str_print(line):
 
 class BasicRenderer:
     ''' 
-    A simple way to manage output to the browser, this will be the basis of all of the 
-    view classes which will be used in PyFram. The use is simple:
+    A simple way to manage output to the browser, this will be the basis of 
+    all of the view classes which will be used in PyFram. The use is simple:
     renderer = BasicRenderer()
     renderer.output()
     '''
@@ -19,13 +19,17 @@ class BasicRenderer:
                   (default {})
         body -- the body part of the request (must be iterable)
                 (default [])
-        output -- the function used to output the value (default print(str(value)))
+        output -- the function used to output the value 
+                (default print(str(value)))
         '''
-        self.headers = headers if headers is not None else {}
-        assert callable(getattr(self.headers, 'keys', None)), 'Headers must have a keys method'
         # if headers is not none use headers, use a new dictionary
+        self.headers = headers if headers is not None else {}
+        # this is a helper to make sure that 
+        assert callable(getattr(self.headers, 'keys', None)), \
+            'Headers must have a keys method'
         # if body is not none use body, else use a new list
         self.body = body if body is not None else []
+        assert callable(output), 'output must be callable'
         # pass in the default output method 
         self.output = output
     
