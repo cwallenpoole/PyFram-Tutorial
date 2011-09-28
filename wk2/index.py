@@ -2,6 +2,7 @@
 
 import view
         
-renderer = view.BasicRenderer()
+renderer = view.BasicRenderer(body=["hello world"])
 renderer.setHeader("Content-type", "text")
+renderer.append("I am adding a line")
 renderer.render()
