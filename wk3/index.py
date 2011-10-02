@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
-import importlib
+import view,os
 
-def runApplication(package, app):
-    try:
-        # importlib allows for the import of a module based on 
-        # the module's name
-        module = importlib.import_module(package)
-        # loop up the attribute provided -- it must be something 
-        # which can be "executable"
-        app = getattr(module, app)
-        # This will need to have a couple of parameters eventually,
-        # but for now, we'll just instantiate it.
-        app();
-    except Exception e:
-        # 500 status is an internal server error + two newlines
-        # means that this automatically creates
-        print("""Status: 500\n\n""" + e.value)
-
+renderer = view.BasicRenderer()
+if os.environ["REQUEST_URI"].endswith(".svg"):
+#    renderer.setHeader("Content-Type", "image/svg+xml")
+    renderer.append('''<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <circle cx="100" cy="50" r="40" stroke="black"
+  stroke-width="2" fill="red" />
+</svg>''')
+else:
+    renderer.setHeader("Content-Type", "text/html")
+    if os.environ["REQUEST_URI"].endswith("/"):
+        renderer.append('''
+<html><body><img src="http://localhost/pyftut/wk3/test.svg" /></body></html>
+''')
+renderer.render()
