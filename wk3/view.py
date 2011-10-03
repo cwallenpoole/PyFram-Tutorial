@@ -23,7 +23,7 @@ class BasicRenderer:
                 (default print(str(value)))
         '''
         # if headers is not none use headers, use a new dictionary
-        self.headers = headers if headers is not None else {}
+        self.headers = headers if headers is not None else {"Content-Type","text/html"}
         # this is a helper to make sure that 
         assert callable(getattr(self.headers, 'keys', None)), \
             'Headers must have a keys method'

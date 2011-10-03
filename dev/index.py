@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 import importlib
+import os
 
-def runApplication(package, app):
+print("Content-Type: text\n")
+print(str(os.environ).replace(",", ",\n"))
+'''def runApplication(package, app):
     try:
         # importlib allows for the import of a module based on 
         # the module's name
@@ -16,4 +19,4 @@ def runApplication(package, app):
         # 500 status is an internal server error + two newlines
         # means that this automatically creates
         print("""Status: 500\n\n""" + e.value)
-
+'''
