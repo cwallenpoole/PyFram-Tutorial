@@ -3,8 +3,8 @@ Options +ExecCGI
 DirectoryIndex index.py
 
 RewriteEngine On
-RewriteBase /pyftut/wk3/
+RewriteBase /pyftut/wk3/wed/
 RewriteRule ^index\.py$ - [L]
-RewriteRule . /pyftut/wk3/index.py [L]
+RewriteRule . /pyftut/wk3/wed/index.py [L]
 
 # Alias /alias ../

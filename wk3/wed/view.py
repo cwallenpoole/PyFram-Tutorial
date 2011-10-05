@@ -1,18 +1,7 @@
-__all__ = ["BasicRenderer"]
+__all__ = ["BasicRenderer", "HTMLRenderer"]
 
 def _str_print(line):
     print(str(line))
-
-class HTMLRenderer(BasicRenderer):
-    def __init__(self, headers = None, body = None, output = _str_print):
-       if not headers:
-           headers = {"Content-Type":"text/html"} 
-       super(HTMLRenderer,self).__init__(headers,body,output)
-       self.body = ['<html>','<head>','</head>','<body>'] + self.body \
-                   + ['</body>','</html>']
-
-    def append(self,line):
-       self.body = self.body[:-1] + line + self.body[-1]
 
 
 class BasicRenderer:
@@ -57,7 +46,7 @@ class BasicRenderer:
     
     def append(self, line):
         ''' an easy means of adding data (generally a list) to the body '''
-        self.body = self.body + line
+        self.body += line
             
     def render(self,output = None):
         ''' passes each line of output to the output function '''
@@ -77,3 +66,16 @@ class BasicRenderer:
         output("")
         for ln in self.body:
             output(ln)
+            
+
+
+class HTMLRenderer(BasicRenderer):
+    ''' class designed for specialization in HTML requestions '''
+    def __init__(self, headers = None, body = None, output = _str_print):
+        headers = headers if headers is not None else {"Content-Type":"text/html"} 
+        super(HTMLRenderer,self).__init__(headers,body,output)
+        self.body = ['<html><head>','</head><body>'] + self.body \
+                  + ['</body></html>']
+
+    def append(self,line):
+        self.body = self.body[:-1] + line + self.body[-1:]
