@@ -1,6 +1,7 @@
 import os
 import xml.sax.saxutils as saxutils
 _request = None
+_foo = ["f","f"
 
 def getRequest(*, d = os.environ):
     ''' returns the default request object, initialized by the values in os.environ '''
@@ -44,15 +45,15 @@ class Request:
             
         # is it an interable? use the first and second indexes as boundaries
         if ind is not None and end is None:
-            return self._sects[ind]
+            return self._segs[ind]
             
         # is it a number? return that index
         elif ind is not None:
-            return self._sects[ind:end]
+            return self._segs[ind:end]
             
         # is ind missing? Then just return everything
         else:
-            return self._sects
+            return self._segs
     
     def __getattr__(self, prop, o = None):
         return self.__src[prop.upper()]

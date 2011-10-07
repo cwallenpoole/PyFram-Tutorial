@@ -79,3 +79,22 @@ class HTMLRenderer(BasicRenderer):
 
     def append(self,line):
         self.body = self.body[:-1] + line + self.body[-1:]
+
+import cgitb
+
+class ErrorRenderer(HTMLRenderer):
+    ''' class which is designed for use with the cgitb.enable method (and eventually
+        with the PyFram handler '''
+    def __init__(self, headers = None, body = None, output = _str_print):
+        super(ErrorRenderer,self).__init__(headers,body,output)
+        self.append(['<pre>'])
+                  
+    def write(self, line = None):
+        # did we close the last pre tag? Then open a new one.
+        if self.body[-1] == '</pre>':
+            self.append(['<pre>'])
+        self.append([line])
+    
+    def flush(self):
+        self.append(['</pre>'])
+        self.render()
