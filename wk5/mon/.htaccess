@@ -1,0 +1,10 @@
+AddHandler cgi-script .cgi .py
+Options +ExecCGI
+DirectoryIndex index.py
+
+RewriteEngine On
+RewriteBase /pyftut/wk4/mon/
+RewriteRule ^index\.py$ - [L]
+RewriteRule . /pyftut/wk4/mon/index.py [L]
+
+# Alias /alias ../
