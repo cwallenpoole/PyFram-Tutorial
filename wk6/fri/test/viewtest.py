@@ -10,14 +10,16 @@ import view
 NO_TAGS = """The rain in Spain does not normally fall on the plains despite
              the frankly overzealous beliefs of one Henry Higgins."""
              
-MISMATCHED_TAGS = """<p>This first set is correct
-<div>The <b>div</b> tag is not matched correctly</span></p>"""
+MISMATCHED_TAGS = """<i>This first set is correct
+<u>The <b>u</b> tag is not matched correctly</em></i>"""
 
-MISSING_CLOSE_TAG = """<p style="yourmom=1">This first set is correct
-<div>The <b>p</b> tag is not matched correctly</div>"""
+MISSING_CLOSE_TAG = """<a style="yourmom=1">This first set is correct
+<i>The <b>a</b> tag is not matched correctly</i>"""
+
+DISALLOWED_TYPE_TAG = """<!-- comment --> comments should not be allowed"""
 
 class TestHTMLCleaner(unittest.TestCase):
-
+    
     def test_basicStringSetsSource(self):
         ''' make sure source works if there are no tags '''
         cleaner = view.HTMLCleaner()
@@ -45,7 +47,7 @@ class TestHTMLCleaner(unittest.TestCase):
     def test_missingClosingCausesErrorInStrictMode(self):
         ''' make sure missing end tags causes error in strict mode '''
         cleaner = view.HTMLCleaner(True)
-        self.assertRaises(html.parser.HTMLParseError,cleaner.feed,MISSING_CLOSE_TAG)        
+        self.assertRaises(html.parser.HTMLParseError,cleaner.feed,MISSING_CLOSE_TAG)  
         
     def test_missingClosingDoesNotCauseErrorInNonStrictMode(self):
         ''' make sure missing end tags does not cause error outside of strict mode '''
@@ -54,6 +56,14 @@ class TestHTMLCleaner(unittest.TestCase):
         # if we've gotten here, simply pass something.
         self.assertTrue(1)     
         
+    def test_overallResultNonStrict(self):
+        ''' Overall result matches as expected '''
+        cleaner = view.HTMLCleaner(False)
+        cleaner.feed('''
+        <div><b>The <a href="your mom">rain</a> in <span>Spain</span></b></div>
+        ''')
+        
+        self.assertEqual(cleaner.result.strip(), '''<b>The <a href="your mom">rain</a> in Spain</b>''')
    
 if __name__ == '__main__':
     unittest.main()

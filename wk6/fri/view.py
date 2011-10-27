@@ -11,31 +11,87 @@ DEFAULT_ALLOWED_TAGS = ['b','strong','em','i','u','a']
 
 class HTMLCleaner(hparse.HTMLParser):
 
-    def __init__(self, strict = True, failSilently = True, allowed = DEFAULT_ALLOWED_TAGS):
-        self.allowedTags = allowed
-        self.failSilently = failSilently
+    def __init__(self, strict = True, bad_type_handler = None, allowed = DEFAULT_ALLOWED_TAGS):
+        self.allowed_tags = allowed
+        self.disallowed_type_handler = bad_type_handler if bad_type_handler is not None \
+                                                        else self._handle_disallowed_type
         
-        super(HTMLCleaner, self).__init__(strict)
+        super(HTMLCleaner, self).__init__(strict)    
     
-    def _assertValidTag(self,tag):
-        if not tag in self.allowedTags:
-            if self.failSilently:
+    def _assert_valid_tag(self,tag):
+        if not tag in self.allowed_tags:
+            if 1 or not self.strict:
                 return False
             self.error('{0} is not in the list of allowed tags: {1}'.\
-                       format(tag,self.allowedTags))
+                       format(tag,self.allowed_tags))
         return True
     
-    def _formatAtts(self, attrs):
+    def _format_attrs(self, attrs):
         result = ['{0}="{1}"'.format(*x) if len(x) == 2 else x for x in attrs]
         return ' '.join(result)
         
     def _handle_disallowed_type(self,data):
-        if self.failSilently:
-            return
         self.error('{0} is not allowed'.format(data))
 
+    # This has to be included to handle http://bugs.python.org/issue13273
+    def parse_starttag(self, i):
+        self.__starttag_text = None
+        endpos = self.check_for_whole_start_tag(i)
+        if endpos < 0:
+            return endpos
+        rawdata = self.rawdata
+        self.__starttag_text = rawdata[i:endpos]
+
+        # Now parse the data between i+1 and j into a tag and attrs
+        attrs = []
+        match = hparse.tagfind.match(rawdata, i+1)
+        assert match, 'unexpected call to parse_starttag()'
+        k = match.end()
+        self.lasttag = tag = rawdata[i+1:k].lower()
+
+        while k < endpos:
+            if self.strict:
+                m = hparse.attrfind.match(rawdata, k)
+            else:
+                # bug fix... sigh...
+                m = hparse.attrfind_tolerant.match(rawdata, k)
+            if not m:
+                break
+            attrname, rest, attrvalue = m.group(1, 2, 3)
+            if not rest:
+                attrvalue = None
+            elif attrvalue[:1] == '\'' == attrvalue[-1:] or \
+                 attrvalue[:1] == '"' == attrvalue[-1:]:
+                attrvalue = attrvalue[1:-1]
+                attrvalue = self.unescape(attrvalue)
+            attrs.append((attrname.lower(), attrvalue))
+            k = m.end()
+            
+        end = rawdata[k:endpos].strip()
+        if end not in (">", "/>"):
+            lineno, offset = self.getpos()
+            if "\n" in self.__starttag_text:
+                lineno = lineno + self.__starttag_text.count("\n")
+                offset = len(self.__starttag_text) \
+                         - self.__starttag_text.rfind("\n")
+            else:
+                offset = offset + len(self.__starttag_text)
+            if self.strict:
+                self.error("junk characters in start tag: %r"
+                           % (rawdata[k:endpos][:20],))
+            self.handle_data(rawdata[i:endpos])
+            return endpos
+        if end.endswith('/>'):
+            # XHTML-style empty tag: <span attr="value" />
+            self.handle_startendtag(tag, attrs)
+        else:
+            self.handle_starttag(tag, attrs)
+            if tag in self.CDATA_CONTENT_ELEMENTS:
+                self.set_cdata_mode()
+        return endpos
+        
     def reset(self):
-        self._openTags  = []
+        self._open_tags  = []
         self.source = ""
         self.result = ""
         super(HTMLCleaner, self).reset()
@@ -43,28 +99,32 @@ class HTMLCleaner(hparse.HTMLParser):
     def feed(self,data):
         self.source = data
         super(HTMLCleaner,self).feed(data)
+        if self._open_tags and self.strict:
+            self.error("The following tag(s) remain unclosed: {0}".\
+                        format(', '.join(self._open_tags)))
         
     def handle_data(self, data):
         # passthrough... no need to do anything here.
         self.result += data
         
     def handle_startendtag(self,tag,attrs):
-        if self._assertValidTag(tag):
-            self.result += '<{0} {1}/>'.format(tag, self._formatAttrs(attrs))
+        if self._assert_valid_tag(tag):
+            self.result += '<{0} {1}/>'.format(tag, self._format_attrs(attrs))
         
     def handle_starttag(self,tag,attrs):
-        if not self._assertValidTag(tag):
+        if not self._assert_valid_tag(tag):
             return
-        self._openTags.append(tag)
-        self.result += '<{0} {1}>'.format(tag, self._formatAttrs(attrs))
+        self._open_tags.append(tag)
+        self.result += '<{0} {1}>'.format(tag, self._format_attrs(attrs))\
+                        if attrs else '<{0}>'.format(tag)
         
     def handle_endtag(self,tag):
-        if not tag in self.allowedTags:
+        if not self._assert_valid_tag(tag):
             return
-        if self.strict and self._openTags[-1] != tag:
+        if self.strict and (not self._open_tags or self._open_tags[-1] != tag):
             self.error("The end tag {0} does not match the latest start tag {1}".\
-                        format(tag, self._openTags[-1]))
-        self.result += '</{0}>'.format(self._openTags.pop())
+                        format(tag, self._open_tags[-1]))
+        self.result += '</{0}>'.format(self._open_tags.pop() if self._open_tags else tag)
     
     def handle_charref(self, name):
         self.handle_entityref("#"+name)
@@ -75,18 +135,18 @@ class HTMLCleaner(hparse.HTMLParser):
 
     # Overridable -- handle comment
     def handle_comment(self, data):
-        _handle_disallowed_type(data)
+        self.disallowed_type_handler(data)
 
     # Overridable -- handle declaration
     def handle_decl(self, decl):
-        _handle_disallowed_type(decl)
+        self.disallowed_type_handler(decl)
 
     # Overridable -- handle processing instruction
     def handle_pi(self, data):
-        _handle_disallowed_type(data)
+        self.disallowed_type_handler(data)
 
     def unknown_decl(self, data):
-        _handle_disallowed_type(data)
+        self.disallowed_type_handler(data)
 
 ################################################################################
 #
@@ -129,11 +189,11 @@ class BasicRenderer:
         self.output = output
         assert callable(output), 'output must be callable'
     
-    def setHeader(self,name,value):
+    def set_header(self,name,value):
         ''' allows for easy means of setting a header '''
         self.headers[name] = value
         
-    def getHeader(self,name):
+    def get_header(self,name):
         ''' allows for an easy means of getting the header set '''
         return self.headers[name]
     
