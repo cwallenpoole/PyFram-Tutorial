@@ -30,7 +30,7 @@ class TestHTMLCleaner(unittest.TestCase):
         ''' make sure result works if there are no tags '''
         cleaner = view.HTMLCleaner()
         cleaner.feed(NO_TAGS)
-        self.assertEqual(cleaner.result,NO_TAGS)
+        self.assertEqual(cleaner.cleaned_data,NO_TAGS)
         
     def test_mismatchedTagsCausesErrorInStrictMode(self):
         ''' make sure mismatched tags causes error in strict mode '''
@@ -56,14 +56,29 @@ class TestHTMLCleaner(unittest.TestCase):
         # if we've gotten here, simply pass something.
         self.assertTrue(1)     
         
-    def test_overallResultNonStrict(self):
+    def test_noAllowedStripsAllTags(self):
+        ''' if allowed is set to an empty list, and escape is false, then there should be no tags in the output '''
+        cleaner = view.HTMLCleaner(escape=False, allowed = [])
+        cleaner.feed('''<div><script><b>The <a href="your mom">rain</a><!-- foo --> in <span>Spain</span></b></script></div>''')
+        
+        self.assertEqual(cleaner.cleaned_data.strip(), '''The rain in Spain''')
+        
+    def test_overallResultNonStrictNonEscape(self):
         ''' Overall result matches as expected '''
         cleaner = view.HTMLCleaner(False,False)
         cleaner.feed('''
-        <div><b>The <a href="your mom">rain</a> in <span>Spain</span></b></div>
+        <div><script><b>The <a href="your mom">rain</a><!-- foo --> in <span>Spain</span></b></script></div>
         ''')
         
-        self.assertEqual(cleaner.result.strip(), '''<b>The <a href="your mom">rain</a> in Spain</b>''')
-   
+        self.assertEqual(cleaner.cleaned_data.strip(), '''<b>The <a href="your mom">rain</a> in Spain</b>''')
+        
+    def test_overallResultNonStrictEscape(self):
+        ''' Overall result matches as expected while escaping'''
+        cleaner = view.HTMLCleaner()
+        cleaner.feed('''
+        <div><script><b>The <a href="your mom">rain</a><!-- foo --> in <span>Spain</span></b></script></div>
+        ''')
+        
+        self.assertEqual(cleaner.cleaned_data.strip(), '''&lt;div&gt;&lt;script&gt;<b>The <a href="your mom">rain</a> in &lt;span&gt;Spain&lt;/span&gt;</b>&lt;/script&gt;&lt;/div&gt;''')
 if __name__ == '__main__':
     unittest.main()

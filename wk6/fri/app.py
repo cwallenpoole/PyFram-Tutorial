@@ -1,7 +1,5 @@
 import view,cgi,os
 
-def sanitize(txt):
-    return txt.replace('<','&lt;')
 
 GUESTBOOK = './guestbook.txt'
 if not os.path.exists(GUESTBOOK):
@@ -15,10 +13,13 @@ if first and last:
    import datetime
    dt = datetime.datetime.today()
    fl = open(GUESTBOOK,'a+')
-   fl.write("{first} {last}\t{month}/{day}/{year} {hour}:{min}:{sec}\n".\
-            format(last=sanitize(last),first=sanitize(first),
+   cleaner = view.HTMLCleaner()
+   cleaner.feed("{first} {last}@\t{month}/{day}/{year} {hour:02d}:{min:02d}:{sec:02d}\n".\
+            format(last=last,first=first,
                    day=dt.day,month=dt.month,year=dt.year,
                    hour=dt.hour, min=dt.minute, sec=dt.second))
+   renderer.append([cleaner.cleaned_data])
+   fl.write(cleaner.cleaned_data)
    fl.flush()
    fl.close()
    del fl 
