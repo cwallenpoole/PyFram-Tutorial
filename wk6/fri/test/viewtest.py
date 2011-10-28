@@ -58,7 +58,7 @@ class TestHTMLCleaner(unittest.TestCase):
         
     def test_overallResultNonStrict(self):
         ''' Overall result matches as expected '''
-        cleaner = view.HTMLCleaner(False)
+        cleaner = view.HTMLCleaner(False,False)
         cleaner.feed('''
         <div><b>The <a href="your mom">rain</a> in <span>Spain</span></b></div>
         ''')
