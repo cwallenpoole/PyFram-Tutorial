@@ -74,11 +74,10 @@ class TestHTMLCleaner(unittest.TestCase):
         
     def test_overallResultNonStrictEscape(self):
         ''' Overall result matches as expected while escaping'''
-        cleaner = view.HTMLCleaner()
-        cleaner.feed('''
+        cleaner = view.HTMLCleaner(feed = '''
         <div><script><b>The <a href="your mom">rain</a><!-- foo --> in <span>Spain</span></b></script></div>
         ''')
         
-        self.assertEqual(cleaner.cleaned_data.strip(), '''&lt;div&gt;&lt;script&gt;<b>The <a href="your mom">rain</a> in &lt;span&gt;Spain&lt;/span&gt;</b>&lt;/script&gt;&lt;/div&gt;''')
+        self.assertEqual(str(cleaner), '''&lt;div&gt;&lt;script&gt;<b>The <a href="your mom">rain</a> in &lt;span&gt;Spain&lt;/span&gt;</b>&lt;/script&gt;&lt;/div&gt;''')
 if __name__ == '__main__':
     unittest.main()

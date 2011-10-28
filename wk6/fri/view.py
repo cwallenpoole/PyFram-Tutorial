@@ -22,7 +22,8 @@ class HTMLCleaner(hparse.HTMLParser):
     # should be fair game
     CDATA_CONTENT_ELEMENTS = (None,)
     
-    def __init__(self, strict = False, escape = True, allowed = DEFAULT_ALLOWED_TAGS):
+    def __init__(self, strict = False, escape = True, 
+                 allowed = DEFAULT_ALLOWED_TAGS, feed = None):
         '''Constructor
         Keyword arguments:
         strict -- whether this is strict mode (see html.parser.HTMLParser) ***NOTE***
@@ -31,12 +32,18 @@ class HTMLCleaner(hparse.HTMLParser):
         allowed -- The list of allowed tags.  
         escape -- should this escape invalid tags or cause an error? (only usable in
                   non-strict mode)
+	feed -- if not None, this will be fed directly into self.feed.
         '''
         self.allowed_tags = allowed
         self.escape = escape
         
         super(HTMLCleaner, self).__init__(strict)    
-    
+        if feed is not None:
+            self.feed(feed)
+
+    def __str__(self):
+        return self.cleaned_data
+ 
     def _assert_valid_tag(self,tag):
         '''
         Tests to see if the provided tag is in the allowed tag set. If in strict mode
