@@ -97,14 +97,16 @@ import cgitb
 class ErrorRenderer(BasicRenderer):
     ''' class which is designed for use with the cgitb.enable method (and eventually
         with the PyFram handler '''
-    def __init__(self, headers = None, body = None, output = _str_print):
-        super(ErrorRenderer,self).__init__(body,output)
-        self.append(['<pre>'])
+    def __init__(self,html = True):
+        super(ErrorRenderer,self).__init__()
+        self.html = html
+        if self.html: 
+            self.append(['<pre>'])
                   
     def write(self, line = None):
         # did we close the last pre tag? Then open a new one.
 	
-        if self.body[-1] == '</pre>':
+        if self.html and self.body[-1] == '</pre>':
             self.append(['<pre>'])
         self.append([line])
     
@@ -118,9 +120,13 @@ class ErrorRenderer(BasicRenderer):
         tmp.extend(self.body)
         
         output = output if output else self.output
-        output('Content-Type: html')
-        output('')
-        output('<html><head/><body>')
+        if self.html: 
+            output('Content-Type: html')
+            output('')
+            output('<html><head/><body>')
+            
         for ln in tmp:
             output(ln)
-        output('</body></html>')
+
+        if self.html: 
+            output('</body></html>')

@@ -1,9 +1,9 @@
-import view.html,cgi,os
+import view,cgi,os
 
 GUESTBOOK = './guestbook.txt'
 if not os.path.exists(GUESTBOOK):
    open(GUESTBOOK,'w+')
-renderer = view.html.HTMLRenderer()
+renderer = view.HTMLRenderer()
 store = cgi.FieldStorage()
 first = store.getvalue('fname','')
 last = store.getvalue('lname','')
@@ -12,7 +12,7 @@ if first and last:
    import datetime
    dt = datetime.datetime.today()
    fl = open(GUESTBOOK,'a+')
-   fl.write( str( view.html.HTMLCleaner(feed = "{first} {last}\t{month}/{day}/{year}"
+   fl.write( str( view.HTMLCleaner(feed = "{first} {last}\t{month}/{day}/{year}"
 		" {hour:02d}:{min:02d}:{sec:02d}\n".format(last=last,first=first,
                    day=dt.day,month=dt.month,year=dt.year,
                    hour=dt.hour, min=dt.minute, sec=dt.second)))+"\n")
