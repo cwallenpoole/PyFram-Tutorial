@@ -1,0 +1,55 @@
+class _Unstrict:
+    def is_valid_property(self,attr):
+        return True
+    
+    def _initial_validation(self,valid):
+        return
+        
+class Tag:
+    def __init__(self, tag_name, contents = None, attrs = None, *, valid = None, **kwargs):
+        self.valid_keys = valid
+        self.tag_name = tag_name
+        self.contents = contents if not contents is None else []       
+        attrs = attrs or {}
+         
+        self.attrs = dict(list(attrs.items()) + list(kwargs.items()) + list(zip(valid,[None]*len(valid))))
+        self._initial_validation(valid)
+        
+    def _initial_validation(self,valid):
+        for attr in self.attrs:
+            if not attr in valid:
+                self.trigger_keyerror(attr)
+        
+    def is_valid_property(self,attr):
+        return attr in self.attrs if hasattr(self,"attrs") else True
+        
+    def __setattr__(self,key,value):
+        if not self.is_valid_property(key):
+            self.trigger_keyerror(key)
+        elif hasattr(self,"attrs"):
+            self.attrs[key] = value
+        else:
+            self.__dict__[key] = value
+            
+    def trigger_keyerror(self,key):
+        raise KeyError('"{0}" is not a valid attribute for a {1} tag.'.format(key, self.tag_name))
+        
+    def get_open_tag(self, self_closing = False):
+        close = ' />' if self_closing else ' >'
+        
+        return '<' + self.tag_name + ' ' + \
+                ' '.join(['{0}="{1}"'.format(key,val or "") for key, val in self.attrs.items() if val is not None]) + \
+                close;
+                
+    def get_close_tag(self):
+        return '</{0}>'.format(self.tag_name)
+        
+    def __str__(self):
+        if not self.contents:
+            return self.get_open_tag(True)
+        return self.get_open_tag() + ''.join(self.contents) + self.get_close_tag()
+        
+    __repr__ = __str__
+    
+class UnstrictTag(_Unstrict, Tag):
+    pass
